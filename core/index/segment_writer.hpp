@@ -36,6 +36,7 @@
 #include "utils/directory_utils.hpp"
 #include "utils/noncopyable.hpp"
 #include "utils/type_limits.hpp"
+#include "ebug.h"
 
 namespace iresearch {
 
@@ -170,6 +171,15 @@ class IRESEARCH_API segment_writer : util::noncopyable {
   template<Action action, typename Field>
   bool insert(Field&& field) {
     if (IRS_LIKELY(valid_)) {
+
+      {
+        std::lock_guard<std::mutex> lock(fileMutex);
+        auto ti = std::this_thread::get_id();
+        //__filenames[ti] = dir_.getDir();
+        __filename = dir_.getDir();
+        //std::cout << "\t\t\t" << dir_.getDir() << std::endl;
+      }
+
       if constexpr (Action::INDEX == action) {
         return index(std::forward<Field>(field));
       }

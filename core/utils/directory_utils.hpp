@@ -113,6 +113,8 @@ struct IRESEARCH_API tracking_directory final : public directory {
     bool track_open = false
   ) noexcept;
 
+  virtual std::string getDir() const override {return impl_.getDir();}
+  
   directory& operator*() noexcept {
     return impl_;
   }
@@ -244,6 +246,8 @@ struct IRESEARCH_API ref_tracking_directory: public directory {
   }
 
   bool visit_refs(const std::function<bool(const index_file_refs::ref_t& ref)>& visitor) const;
+
+  virtual std::string getDir() const override {return impl_.getDir();};
 
  private:
   using refs_t = absl::flat_hash_set<

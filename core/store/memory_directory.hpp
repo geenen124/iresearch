@@ -313,6 +313,8 @@ class IRESEARCH_API memory_directory final : public directory {
 
   virtual bool visit(const visitor_f& visitor) const override;
 
+  virtual std::string getDir() const override;
+  
  private:
   friend class single_instance_lock;
   using file_map = absl::flat_hash_map<std::string, std::unique_ptr<memory_file>>; // unique_ptr because of rename

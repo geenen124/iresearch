@@ -40,6 +40,8 @@ class directory_utils_tests: public ::testing::Test {
    public:
     directory_mock() noexcept { }
 
+    virtual std::string getDir() const override {return std::string();}
+
     using directory::attributes;
 
     virtual irs::attribute_store& attributes() noexcept override {
@@ -649,6 +651,8 @@ TEST_F(directory_utils_tests, test_ref_tracking_dir) {
 
   struct error_directory: public irs::directory {
     irs::attribute_store attrs;
+    virtual std::string getDir() const override {return std::string();}
+
     virtual irs::attribute_store& attributes() noexcept override { return attrs; }
     virtual irs::index_output::ptr create(const std::string&) noexcept override { return nullptr; }
     virtual bool exists(bool& result, const std::string&) const noexcept override { return false; }

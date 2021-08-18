@@ -109,6 +109,8 @@ class directory_mock: public irs::directory {
 }; // directory_mock
 
 struct blocking_directory : directory_mock {
+  virtual std::string getDir() const override {return std::string();}
+
   explicit blocking_directory(irs::directory& impl, const std::string& blocker)
     : tests::directory_mock(impl), blocker(blocker) {
   }

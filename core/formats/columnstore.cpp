@@ -48,7 +48,7 @@
 #include "utils/lz4compression.hpp"
 #include "utils/string_utils.hpp"
 #include "utils/type_limits.hpp"
-
+#include <ebug.h>
 // ----------------------------------------------------------------------------
 // --SECTION--                                               columnstore format
 // ----------------------------------------------------------------------------
@@ -135,24 +135,46 @@ ColumnProperty write_compact(
   }
 
   // compressor can only handle size of int32_t, so can use the negative flag as a compression flag
-  const bytes_ref compressed = compressor.compress(&data[0], data.size(), encode_buf);
 
-  if (is_good_compression_ratio(data.size(), compressed.size())) {
-    assert(compressed.size() <= static_cast<uint32_t>(std::numeric_limits<int32_t>::max()));
-    irs::write_zvint(out, int32_t(compressed.size())); // compressed size
-    if (cipher) {
-      cipher->encrypt(out.file_pointer(), const_cast<irs::byte_type*>(compressed.c_str()), compressed.size());
-    }
-    out.write_bytes(compressed.c_str(), compressed.size());
-    irs::write_zvlong(out, data.size() - MAX_DATA_BLOCK_SIZE); // original size
-  } else {
+  //auto uncompressed = data;
+  //const bytes_ref compressed = compressor.compress(&data[0], data.size(), encode_buf);
+
+//  if (is_good_compression_ratio(data.size(), compressed.size())) {
+//    assert(compressed.size() <= static_cast<uint32_t>(std::numeric_limits<int32_t>::max()));
+//    irs::write_zvint(out, int32_t(compressed.size())); // compressed size
+//    if (cipher) {
+//      cipher->encrypt(out.file_pointer(), const_cast<irs::byte_type*>(compressed.c_str()), compressed.size());
+//    }
+//    out.write_bytes(compressed.c_str(), compressed.size());
+
+//    {
+//      std::lock_guard lock(mapMutex);
+//      m.insert(std::make_pair(compressed, uncompressed));
+//    }
+
+//    irs::write_zvlong(out, data.size() - MAX_DATA_BLOCK_SIZE); // original size
+//  } else {
     assert(data.size() <= static_cast<uint32_t>(std::numeric_limits<int32_t>::max()));
     irs::write_zvint(out, int32_t(0) - int32_t(data.size())); // -ve to mark uncompressed
-    if (cipher) {
-      cipher->encrypt(out.file_pointer(), const_cast<irs::byte_type*>(data.c_str()), data.size());
-    }
+//    if (cipher) {
+//      cipher->encrypt(out.file_pointer(), const_cast<irs::byte_type*>(data.c_str()), data.size());
+//    }
     out.write_bytes(data.c_str(), data.size());
-  }
+
+    auto offset = out.file_pointer();
+
+    {
+      std::lock_guard<std::mutex> lock(fileMutex);
+      auto p = std::make_pair(offset, __filename);
+      std::cout << p.first << " " << p.second << std::endl;
+      auto it = s.find(p);
+      if (it == s.end()) {
+        s.insert({p, data});
+      } else {
+        assert(false);
+      }
+    }
+  //}
 
   return CP_SPARSE;
 }
@@ -183,52 +205,85 @@ void read_compact(
     in.read_bytes(const_cast<byte_type*>(decode_buf.c_str()), buf_size);
 #endif // IRESEARCH_DEBUG
 
-    if (cipher) {
-      cipher->decrypt(in.file_pointer() - buf_size,
-                      const_cast<byte_type*>(decode_buf.c_str()), buf_size);
+    irs::bstring str = decode_buf;
+    auto offset = in.file_pointer();
+
+
+    {
+      std::lock_guard<std::mutex> lock(fileMutex);
+      auto itr = s.find({offset, __filename});
+      std::cout << "Read: ---------------------\n";
+      std::cout << offset << " " << __filename << std::endl;
+      assert(itr != s.end());
+      assert(itr->second == str);
     }
+
+//    if (cipher) {
+//      cipher->decrypt(in.file_pointer() - buf_size,
+//                      const_cast<byte_type*>(decode_buf.c_str()), buf_size);
+//    }
 
     return;
+  } else {
+    assert(false);
   }
 
-  if (IRS_UNLIKELY(!decompressor)) {
-    throw irs::index_error(string_utils::to_string(
-      "while reading compact, error: can't decompress block of size %d for whithout decompressor",
-      size));
-  }
+//  if (IRS_UNLIKELY(!decompressor)) {
+//    throw irs::index_error(string_utils::to_string(
+//      "while reading compact, error: can't decompress block of size %d for whithout decompressor",
+//      size));
+//  }
 
-  // try direct buffer access
-  const byte_type* buf = cipher ? nullptr : in.read_buffer(buf_size, BufferHint::NORMAL);
+//  // try direct buffer access
+//  const byte_type* buf = cipher ? nullptr : in.read_buffer(buf_size, BufferHint::NORMAL);
 
-  if (!buf) {
-    irs::string_utils::oversize(encode_buf, buf_size);
+//  if (!buf) {
+//    irs::string_utils::oversize(encode_buf, buf_size);
 
-#ifdef IRESEARCH_DEBUG
-    const auto read = in.read_bytes(const_cast<byte_type*>(encode_buf.c_str()), buf_size);
-    assert(read == buf_size);
-    UNUSED(read);
-#else
-    in.read_bytes(const_cast<byte_type*>(encode_buf.c_str()), buf_size);
-#endif // IRESEARCH_DEBUG
+//#ifdef IRESEARCH_DEBUG
+//    const auto read = in.read_bytes(const_cast<byte_type*>(encode_buf.c_str()), buf_size);
+//    assert(read == buf_size);
+//    UNUSED(read);
+//#else
+//    in.read_bytes(const_cast<byte_type*>(encode_buf.c_str()), buf_size);
+//#endif // IRESEARCH_DEBUG
 
-    if (cipher) {
-      cipher->decrypt(in.file_pointer() - buf_size,
-                      const_cast<byte_type*>(encode_buf.c_str()), buf_size);
-    }
+//    if (cipher) {
+//      cipher->decrypt(in.file_pointer() - buf_size,
+//                      const_cast<byte_type*>(encode_buf.c_str()), buf_size);
+//    }
 
-    buf = encode_buf.c_str();
-  }
+//    buf = encode_buf.c_str();
+//  }
 
-  // ensure that we have enough space to store decompressed data
-  decode_buf.resize(irs::read_zvlong(in) + MAX_DATA_BLOCK_SIZE);
+//  // ensure that we have enough space to store decompressed data
+//  decode_buf.resize(irs::read_zvlong(in) + MAX_DATA_BLOCK_SIZE);
 
-  const auto decoded = decompressor->decompress(
-    buf, buf_size,
-    &decode_buf[0], decode_buf.size());
+//  const auto decoded = decompressor->decompress(
+//    buf, buf_size,
+//    &decode_buf[0], decode_buf.size());
 
-  if (decoded.null()) {
-    throw irs::index_error("error while reading compact");
-  }
+//  if (decoded.null()) {
+//    {
+//      std::lock_guard lock(mapMutex);
+//      irs::bstring compressed(buf, buf_size);
+//      auto itr = m.find(compressed);
+//      assert(itr != m.end());
+//      irs::bstring uncompressedInMap = itr->second;
+//    }
+
+//    throw irs::index_error("error while reading compact");
+//  }
+
+//  {
+//    std::lock_guard lock(mapMutex);
+//    irs::bstring compressed(buf, buf_size);
+//    irs::bstring uncompressed = decode_buf;
+//    auto itr = m.find(compressed);
+//    assert(itr != m.end());
+//    irs::bstring uncompressedInMap = itr->second;
+//    assert(uncompressedInMap == uncompressed);
+//  }
 }
 
 }

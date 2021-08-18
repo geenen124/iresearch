@@ -40,6 +40,7 @@
 #include "utils/type_limits.hpp"
 #include "utils/version_utils.hpp"
 #include "store/store_utils.hpp"
+#include "ebug.h"
 
 #include <array>
 
@@ -79,6 +80,8 @@ class noop_directory : public directory {
     static noop_directory INSTANCE;
     return INSTANCE;
   }
+
+  virtual std::string getDir() const override {return std::string();}
 
   virtual attribute_store& attributes() noexcept override {
     return const_cast<attribute_store&>(attribute_store::empty_instance());
@@ -1140,6 +1143,15 @@ bool write_columns(
       const column_meta& column) {
     return cs.insert(segment, column.id, doc_map);
   };
+
+  {
+    std::lock_guard<std::mutex> lock(fileMutex);
+    auto ti = std::this_thread::get_id();
+    
+    //__filenames[ti] = dir.getDir();
+    __filename = dir.getDir();
+    //std::cout << "\t\t\t" << dir.getDir() << std::endl;
+  }
 
   auto cmw = meta.codec->get_column_meta_writer();
 

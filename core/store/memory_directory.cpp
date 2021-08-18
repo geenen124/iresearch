@@ -394,7 +394,8 @@ void memory_index_output::write_bytes( const byte_type* b, size_t len ) {
       switch_buffer();
     }
 
-    to_copy = std::min(size_t(std::distance(pos_, end_)), len);
+    auto dist = size_t(std::distance(pos_, end_));
+    to_copy = std::min(dist, len);
     std::memcpy(pos_, b, sizeof(byte_type) * to_copy);
     b += to_copy;
     pos_ += to_copy;
@@ -427,6 +428,17 @@ void memory_index_output::operator>>( data_output& out ) {
 
 memory_directory::memory_directory(size_t pool_size /* = 0*/) {
   alloc_ = &directory_utils::ensure_allocator(*this, pool_size);
+}
+
+std::string memory_directory::getDir() const {
+  std::string str;
+
+  for(auto& file : files_) {
+    str += file.first;
+    str += " ";
+  }
+
+  return str;
 }
 
 memory_directory::~memory_directory() noexcept {

@@ -1546,6 +1546,15 @@ index_writer::consolidation_result index_writer::consolidate(
     }
   }
 
+  {
+    std::lock_guard<std::mutex> lock(fileMutex);
+    auto ti = std::this_thread::get_id();
+
+    //__filenames[ti] = dir.getDir();
+    __filename = dir.getDir();
+    //std::cout << "\t\t\t" << dir.getDir() << std::endl;
+  }
+
   // we do not persist segment meta since some removals may come later
   if (!merger.flush(consolidation_segment, progress)) {
     // nothing to consolidate or consolidation failure

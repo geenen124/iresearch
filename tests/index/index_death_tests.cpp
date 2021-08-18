@@ -48,6 +48,8 @@ class failing_directory : public tests::directory_mock {
     DUP_NULL // return nullptr from index_input::dup
   };
 
+  virtual std::string getDir() const override {return std::string();};
+
  private:
   class failing_index_input : public irs::index_input {
    public:

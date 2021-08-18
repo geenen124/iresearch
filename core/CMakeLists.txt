@@ -176,6 +176,7 @@ set(IResearch_core_sources
   ./utils/network_utils.cpp
   ./utils/cpuinfo.cpp
   ./utils/numeric_utils.cpp
+  ./ebug.cpp
   ${IResearch_core_os_specific_sources}
   ${IResearch_core_optimized_sources}
 )
@@ -271,6 +272,7 @@ set(IResearch_core_headers
   ./utils/type_id.hpp
   ./shared.hpp
   ./types.hpp
+  ./ebug.h
 )
 
 # TODO: use FindLibDL and check linux distr version

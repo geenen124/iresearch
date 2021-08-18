@@ -232,6 +232,8 @@ struct IRESEARCH_API directory : private util::noncopyable {
   const irs::attribute_store& attributes() const noexcept {
     return const_cast<directory*>(this)->attributes();
   }
+
+  virtual std::string getDir() const = 0;
 }; // directory
 
 }

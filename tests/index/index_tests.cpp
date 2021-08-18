@@ -2145,6 +2145,8 @@ class index_test_case : public tests::index_test_base {
     struct override_sync_directory : tests::directory_mock {
       typedef std::function<bool (const std::string&)> sync_f;
 
+      virtual std::string getDir() const override {return std::string();}
+
       override_sync_directory(irs::directory& impl, sync_f&& sync)
         : directory_mock(impl), sync_(std::move(sync)) {
       }

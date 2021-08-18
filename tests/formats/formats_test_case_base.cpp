@@ -933,6 +933,9 @@ TEST_P(format_test_case, segment_meta_read_write) {
         : dir_(dir), meta_(meta) {
       }
 
+      virtual std::string getDir() const override {return std::string();}
+
+
       using directory::attributes;
 
       virtual irs::attribute_store& attributes() noexcept override {

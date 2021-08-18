@@ -73,6 +73,8 @@ class IRESEARCH_API fs_directory : public directory {
 
   virtual bool visit(const visitor_f& visitor) const override;
 
+  virtual std::string getDir() const override {return directory();}
+
  private:
   IRESEARCH_API_PRIVATE_VARIABLES_BEGIN
   attribute_store attributes_;
