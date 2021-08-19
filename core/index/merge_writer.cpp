@@ -467,7 +467,7 @@ class compound_iterator {
         const sub_reader& reader,
         const doc_map_f& doc_map)
       : it(std::move(it)),
-        reader(&reader), 
+        reader(&reader),
         doc_map(&doc_map) {
       }
 
@@ -483,7 +483,7 @@ class compound_iterator {
 
   const value_type* current_value_{};
   string_ref current_key_;
-  std::vector<size_t> iterator_mask_; // valid iterators for current step 
+  std::vector<size_t> iterator_mask_; // valid iterators for current step
   std::vector<iterator_t> iterators_; // all segment iterators
 }; // compound_iterator
 
@@ -751,7 +751,7 @@ void compound_field_iterator::add(
 
   field_iterators_.emplace_back(
     reader.fields(),
-    reader, 
+    reader,
     doc_id_map
   );
 }
@@ -790,7 +790,7 @@ bool compound_field_iterator::next() {
     const auto* field_terms = field_itr.reader->field(field_meta.name);
     const string_ref field_id = field_meta.name;
 
-    if (!field_terms  || 
+    if (!field_terms  ||
         (!field_iterator_mask_.empty() && field_id > current_field_)) {
       continue; // empty field or value too large
     }
@@ -958,8 +958,8 @@ class columnstore {
     }
   }
 
-  // returs 
-  //   'true' if object has been initialized sucessfully, 
+  // returs
+  //   'true' if object has been initialized sucessfully,
   //   'false' otherwise
   operator bool() const noexcept { return static_cast<bool>(writer_); }
 
@@ -1147,7 +1147,7 @@ bool write_columns(
   {
     std::lock_guard<std::mutex> lock(fileMutex);
     auto ti = std::this_thread::get_id();
-    
+
     //__filenames[ti] = dir.getDir();
     __filename = dir.getDir();
     //std::cout << "\t\t\t" << dir.getDir() << std::endl;
@@ -1162,14 +1162,14 @@ bool write_columns(
     cs.reset(column_info(column_name));
 
     // visit matched columns from merging segments and
-    // write all survived values to the new segment 
+    // write all survived values to the new segment
     if (!progress() || !column_itr.visit(visitor)) {
       return false; // failed to visit all values
     }
 
     if (!cs.empty()) {
       cmw->write(column_name, cs.id());
-    } 
+    }
   }
 
   cmw->flush();
@@ -1720,6 +1720,16 @@ bool merge_writer::flush(
   const auto& progress_callback = progress ? progress : PROGRESS_NOOP;
 
   tracking_directory track_dir(dir_); // track writer created files
+
+//  auto dir = dir_.getDir();
+//  {
+//    std::lock_guard<std::mutex> lock(fileMutex);
+//    auto ti = std::this_thread::get_id();
+
+//    __filenames[ti] = dir;
+//    //__filename = dir_.getDir();
+//    //std::cout << "\t\t\t" << dir_.getDir() << std::endl;
+//  }
 
   result = comparator_
     ? flush_sorted(track_dir, segment, progress_callback)

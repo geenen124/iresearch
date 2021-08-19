@@ -136,6 +136,16 @@ class IRESEARCH_API segment_writer : util::noncopyable {
     ////////////////////////////////////////////////////////////////////////////
     template<Action action, typename Iterator>
     bool insert(Iterator begin, Iterator end) const {
+      auto dir =  writer_.dir_.getDir();
+      {
+        std::lock_guard<std::mutex> lock(fileMutex);
+        auto ti = std::this_thread::get_id();
+
+        __filenames[ti] = dir;
+        //__filename = dir.getDir();
+        //std::cout << "\t\t\t" << dir.getDir() << std::endl;
+      }
+
       for (; writer_.valid() && begin != end; ++begin) {
         insert<action>(*begin);
       }

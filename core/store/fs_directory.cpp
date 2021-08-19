@@ -638,5 +638,17 @@ bool fs_directory::sync(const std::string& name) noexcept {
   return false;
 }
 
+std::string fs_directory::getDir() const {
+  std::string files;
+
+  auto visitor = [&files](std::string& file) -> bool {
+    files += file + " ";
+    return true;
+  };
+
+  this->visit(visitor);
+  return files;
+}
+
 MSVC_ONLY(__pragma(warning(pop)))
 }

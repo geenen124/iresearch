@@ -19,4 +19,6 @@ extern std::map<irs::bstring, irs::bstring> m;
                //        offset    file         uncompressed
 extern std::map<std::pair<size_t, std::string>, irs::bstring> s;
 
+extern std::set<size_t> offsets;
+
 #endif // EBUG_H

@@ -426,12 +426,12 @@ class index_profile_test_case : public tests::index_test_base {
 
     auto writer = open_writer(irs::OM_CREATE, options);
 
-//    thread_pool.run([consolidate_interval, &working, &writer, &policy]()->void {
-//      while (working.load()) {
-//        writer->consolidate(policy);
-//        std::this_thread::sleep_for(std::chrono::milliseconds(consolidate_interval));
-//      }
-//    });
+    thread_pool.run([consolidate_interval, &working, &writer, &policy]()->void {
+      while (working.load()) {
+        writer->consolidate(policy);
+        std::this_thread::sleep_for(std::chrono::milliseconds(consolidate_interval));
+      }
+    });
 
     {
       auto finalizer = irs::make_finally([&working]()noexcept{working = false;});
@@ -440,6 +440,9 @@ class index_profile_test_case : public tests::index_test_base {
 
     thread_pool.stop();
     writer->commit(); // ensure there are no consolidation-pending segments left in 'consolidating_segments_' before applying the final consolidation
+
+    std::cout << "\n\nRead:--------------------------------\n" << std::endl;
+
     ASSERT_TRUE(writer->consolidate(policy));
     writer->commit();
 
@@ -486,10 +489,11 @@ TEST_P(index_profile_test_case, profile_bulk_index_multithread_cleanup_mt) {
 TEST_P(index_profile_test_case, profile_bulk_index_multithread_consolidate_mt) {
   // a lot of threads cause a lot of contention for the segment pool
 
-  m.clear();
-  s.clear();
-  __filenames.clear();
-  profile_bulk_index_dedicated_consolidate(1, 10000, 500);
+  //m.clear();
+  //s.clear();
+  //__filenames.clear();
+  offsets.clear();
+  profile_bulk_index_dedicated_consolidate(2, 10000, 500);
 }
 
 TEST_P(index_profile_test_case, profile_bulk_index_multithread_dedicated_commit_mt) {

@@ -9,3 +9,5 @@ std::string __filename;
 std::map<irs::bstring, irs::bstring> m;
                //        offset    file         uncompressed
 std::map<std::pair<size_t, std::string>, irs::bstring> s;
+
+std::set<size_t> offsets;

@@ -164,15 +164,23 @@ ColumnProperty write_compact(
     auto offset = out.file_pointer();
 
     {
-      std::lock_guard<std::mutex> lock(fileMutex);
-      auto p = std::make_pair(offset, __filename);
-      std::cout << p.first << " " << p.second << std::endl;
-      auto it = s.find(p);
-      if (it == s.end()) {
-        s.insert({p, data});
-      } else {
-        assert(false);
-      }
+//      std::lock_guard<std::mutex> lock(fileMutex);
+//      auto file = __filenames[std::this_thread::get_id()];
+//      auto p = std::make_pair(offset, file);
+//      std::cout << p.first << " " << p.second << std::endl;
+//      auto it = s.find(p);
+//      if (it == s.end()) {
+//        s.insert({p, data});
+//      } else {
+//        assert(false);
+//      }
+
+      std::lock_guard<std::mutex> lock(mapMutex);
+      auto res = offsets.insert(offset);
+      //if(!res.second) {
+      //  std::cout << "dup: ";
+      //}
+      //std::cout << offset << std::endl;
     }
   //}
 
@@ -210,19 +218,19 @@ void read_compact(
 
 
     {
-      std::lock_guard<std::mutex> lock(fileMutex);
-      auto itr = s.find({offset, __filename});
-      std::cout << "Read: ---------------------\n";
-      std::cout << offset << " " << __filename << std::endl;
-      assert(itr != s.end());
-      assert(itr->second == str);
+//      std::lock_guard<std::mutex> lock(fileMutex);
+//      auto file = __filenames[std::this_thread::get_id()];
+
+//      auto itr = s.find({offset, file});
+//      std::cout << offset << " " << file << std::endl;
+//      assert(itr != s.end());
+//      assert(itr->second == str);
+
+      std::lock_guard<std::mutex> lock(mapMutex);
+      auto itr = offsets.find(offset);
+      //std::cout << offset << std::endl;
+      assert(itr != offsets.end());
     }
-
-//    if (cipher) {
-//      cipher->decrypt(in.file_pointer() - buf_size,
-//                      const_cast<byte_type*>(decode_buf.c_str()), buf_size);
-//    }
-
     return;
   } else {
     assert(false);
